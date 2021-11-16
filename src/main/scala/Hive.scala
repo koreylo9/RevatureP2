@@ -1,6 +1,10 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf,SparkContext}
 
+
+
+// This is the Hive application that will take nfl data
+// and put it into a Table and execute Spark Queries on them
 object Hive {
   def main(args:Array[String]) : Unit = {
     connect()
