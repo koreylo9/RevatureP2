@@ -8,12 +8,15 @@ import scala.annotation.tailrec
 import scala.sys.exit
 
 // This is a comment for the main file
+//adfasfdasfasdafdasfasdf
+
 object Main {
 
   def main(args:Array[String]): Unit = {
     UserDB.connect()
     Hive.connect()
     userMainMenu()
+    //restsetgfd
   }
 
   def userMainMenu() : Unit = {
