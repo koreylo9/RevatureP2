@@ -1,12 +1,15 @@
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.{SparkConf,SparkContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 object Hive {
   def main(args:Array[String]) : Unit = {
     connect()
     showData("1")
   }
+
   private var spark:SparkSession = _
+
   def connect() : Unit = {
     System.setProperty("hadoop.home.dir", "C:\\hadoop")
     spark = SparkSession
@@ -26,7 +29,12 @@ object Hive {
 
     spark.sql("Load data Local Inpath 'input/nfl_data2.csv' into table nfl_data")
     //    spark.sql("select * from nfl_data ").show(100)
+
+    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv")
+    val broadcastData = spark.sparkContext.broadcast(nfldf)
+
   }
+
 
 
   def showData(choice:String) : Unit = {
