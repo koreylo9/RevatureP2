@@ -29,10 +29,6 @@ object Hive {
 
     spark.sql("Load data Local Inpath 'input/nfl_data2.csv' into table nfl_data")
     //    spark.sql("select * from nfl_data ").show(100)
-
-    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv")
-    val broadcastData = spark.sparkContext.broadcast(nfldf)
-
   }
 
 

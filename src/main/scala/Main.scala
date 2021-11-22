@@ -3,8 +3,12 @@ import java.sql.{Connection, DriverManager, SQLException}
 import scala.io.StdIn
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
-import scala.util.control.Breaks._
 
+import scala.util.control.Breaks._
+import org.apache.spark.sql.{Encoder, Encoders}
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.sql.functions.{col, count, countDistinct, desc, when}
+import CustomImplicits._
 
 import scala.annotation.tailrec
 import scala.sys.exit
@@ -32,6 +36,9 @@ object Main {
     var connection: Connection = DriverManager.getConnection(url, username, password)
     val statement = connection.createStatement()
 
+    //CONNECT TO SPARK AND CREATE A TABLE FOR SQL-LIKE QUERIES IN SPARK//
+    Hive.connect()
+
 
     //INITIATE SPARK SESSION//
     System.setProperty("hadoop.home.dir", "C:\\hadoop")
@@ -44,9 +51,22 @@ object Main {
     println("created spark session")
     spark.sparkContext.setLogLevel("ERROR")
 
-    //CREATE BROADCAST VARIABLE TO USE THROUGHOUT THE PROGRAM//
+    //P2 ADDITION////P2 ADDITION////P2 ADDITION////P2 ADDITION//
+    //CREATE BROADCAST VARIABLE, DATAFRAME, DATASET, AND RDD TO USE THROUGHOUT THE PROGRAM//
+
+    //DATAFRAME//
     val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv")
+    nfldf.persist(StorageLevel.MEMORY_AND_DISK)
+    //DATASET//
+    val nflds = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv").as[NFL]
+    nflds.persist(StorageLevel.MEMORY_AND_DISK)
+    //RDD//
+    val nflrdd = nfldf.rdd
+    nflrdd.persist(StorageLevel.MEMORY_AND_DISK)
+    //BROADCAST VARIABLE (DATAFRAME)//
     val broadcastData = spark.sparkContext.broadcast(nfldf)
+
+    //P2 ADDITION////P2 ADDITION////P2 ADDITION////P2 ADDITION//
 
     //PROGRAM LOOP
     do {
@@ -123,12 +143,17 @@ object Main {
         //OPTION MENU
         do {
           println("What would you like to do today, " + user + "?")
-          println("1) Solve the problems")
+          println("1) Most Popular Formations")
+          println("2) Total Sacks")
+          println("3) Query 3")
+          println("4) Query 4")
+          println("5) Query 5")
+          println("6) Query 6")
           if(privileges == "admin"){
-            println("2) Add user -ADMIN ONLY OPTION-")
-            println("3) Delete user -ADMIN ONLY OPTION")
+            println("7) Add user -ADMIN ONLY OPTION-")
+            println("8) Delete user -ADMIN ONLY OPTION")
           }
-          println("4) Back")
+          println("9) Back")
           print("> ")
           optionmenuselection = StdIn.readLine()
           println()
@@ -141,26 +166,28 @@ object Main {
 
           optionmenuselection match {
             case "1" =>
-
               //QUERY 1
-              broadcastData.value.show()
+              broadcastData.value.groupBy("Formation").count().sort(desc("count")).withColumnRenamed("count","Total_Times_Seen").show()
 
+            case "2" =>
               //QUERY 2
+              nflds.groupBy("isSack").count().filter("isSack == 1").withColumnRenamed("count","Total_Sacks").show()
 
 
+            case "3" =>
               //QUERY 3
 
-
+            case "4" =>
               //QUERY 4
 
-
+            case "5" =>
               //QUERY 5
 
-
+            case "6" =>
               //QUERY 6
 
 
-            case "2" =>
+            case "7" =>
               //ADD A USER
               print("What is the name of the new user?: ")
               var newuser = StdIn.readLine()
@@ -199,7 +226,7 @@ object Main {
               println(Console.BLUE + "SUCCESS! USER HAS BEEN ADDED!" + Console.RESET)
               println()
 
-            case "3" =>
+            case "8" =>
               //DELETE A USER
               print("What is the User ID of the user you are trying to delete? ")
               var userid = StdIn.readLine()
@@ -218,7 +245,7 @@ object Main {
                 println()
               }
 
-            case "4" => optionmenucheck = true
+            case "9" => optionmenucheck = true
             case "thisdoesnothing" =>
             case _ => println(Console.RED + "ERROR, UNEXPECTED COMMAND: select a valid command from the selection menu" + Console.RESET)
               println()
@@ -231,7 +258,7 @@ object Main {
 
     } while(!programexitcheck)
 
-    println("Thank you for using my app, Goodbye!")
+    println("Thank you for using OUR app, Goodbye!")
 
   }
 
