@@ -1,6 +1,7 @@
 import org.apache.spark.sql.{SQLContext, SparkSession, functions}
+import org.apache.spark.sql.SQLImplicits
 
-
+case class nflD(name:String, rush:Int, direction:String)
 
 // This is the Hive application that will take nfl data
 // and put it into a Table and execute Spark Queries on them
@@ -51,38 +52,38 @@ object Hive {
 //      case _ => println("No Results")
 //    }
 
+    //Angel Code
+    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfl_data2.csv")
+    val broadcastData = spark.sparkContext.broadcast(nfldf).value
+
     //Dataframe
-    val rdt = spark.table("nfl_data")
+//    val rdd = spark.table("nfl_data")
 
     // DataFrame to DataSet
-    val rd2 = rdt.select("offenseteam","yards").filter((rdt("isRush") === 1) && rdt("offenseTeam") === "SF")
+    val rds = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT END")
 
-    // Perform action
-    val rdd3 = rd2.agg(functions.sum("yards")).first.get(0)
+
+    val rd2 = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT END")
+
+    rds.withColumnRenamed("yards","rushLeft").join(rd2.withColumnRenamed("yards","rushRight"),"offenseteam").show()
+
+//    rds.join(rd2,"offenseteam").show()
+
+
+//     Perform action
+//    val rda = rds.agg(functions.sum("yards")).first.get(0)
 
     //Test against sql query
-    spark.sql("SELECT sum(yards) count FROM nfl_data WHERE isRush = 1 AND OffenseTeam = 'SF' ").show()
+//    val dataF = spark.sql("SELECT OffenseTeam,isRush,rushdirection FROM nfl_data WHERE isRush = 1 AND OffenseTeam = 'SF' AND rushdirection='LEFT END'").show()
+
+
 
     //result that should be same as query
-    println(rdd3)
+//    println(rda)
 
-//    val rdd1 = spark.sparkContext.textFile("nfl_data2.csv")
-//    val rdd = rdd1.map(f=>{f.split(",")})
-//    rdd.collect()
-//    val teams = Map(("LAR","Los Angeles Rams"),("SF","San Francisco"),("LAC","Los Angeles Chargers"))
-//
-//    val broadcastTeams = spark.sparkContext.broadcast(teams)
-//
-//
-//
-//
-//    val rdd2 = rdd.map(f=>{
-//      val offenseTeam = f(2)
-//      val fullTeam = broadcastTeams.value.get(offenseTeam).get
-//      (fullTeam,f(8),f(12))
-//    })
-//
-//    println(rdd2.collect().mkString("\n"))
+
 
   }
 
