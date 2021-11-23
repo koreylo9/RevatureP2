@@ -167,12 +167,13 @@ object Main {
           optionmenuselection match {
             case "1" =>
               //QUERY 1
+              //QUERY FORM: SELECT DISTINCT Formation, COUNT(Formation) OVER(Partition by Formation) AS Total_Times_Seen FROM nfl_data ORDER BY Total_Times_Seen DESC
               broadcastData.value.groupBy("Formation").count().sort(desc("count")).withColumnRenamed("count","Total_Times_Seen").show()
 
             case "2" =>
               //QUERY 2
+              //QUERY FORM: SELECT count(isSack) as Total_Sacks FROM nfl_data WHERE isSack = 1
               nflds.groupBy("isSack").count().filter("isSack == 1").withColumnRenamed("count","Total_Sacks").show()
-
 
             case "3" =>
               //QUERY 3
