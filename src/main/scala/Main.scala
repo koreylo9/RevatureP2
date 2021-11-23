@@ -37,8 +37,10 @@ object Main {
     val statement = connection.createStatement()
 
     //CONNECT TO SPARK AND CREATE A TABLE FOR SQL-LIKE QUERIES IN SPARK//
-    Hive.connect()
-
+    //Hive.connect()
+    //READS THE OLD(CURRENT) nfl_data2.csv TO CREATE A TABLE
+    //COMMENTED OUT TO AVOID BREAKING THE CODE IF THE NEW FILE IS USED
+    //UNCOMMENT IF THE TABLE CREATION HAS BEEN UPDATED TO INCLUDE THE NEW COLUMNS IN THE NEW FILE
 
     //INITIATE SPARK SESSION//
     System.setProperty("hadoop.home.dir", "C:\\hadoop")
@@ -262,6 +264,8 @@ object Main {
     println("Thank you for using OUR app, Goodbye!")
 
   }
+
+  
 
 }
 
