@@ -2,15 +2,15 @@ import java.beans.Statement
 import java.sql.{Connection, DriverManager, SQLException}
 import scala.io.StdIn
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Encoder, Encoders, SparkSession, functions}
 
 import scala.util.control.Breaks._
-import org.apache.spark.sql.{Encoder, Encoders}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.functions.{col, count, countDistinct, desc, when}
 import CustomImplicits._
-import java.security.MessageDigest
 
+
+import java.security.MessageDigest
 import scala.annotation.tailrec
 import scala.sys.exit
 
@@ -60,7 +60,7 @@ object Main {
 
     //DATAFRAME//
     val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfldata_updated.csv")
-    val reparnfldf = nfldf.repartition(3).toDF()
+    val reparnfldf = nfldf.repartition(3)
     reparnfldf.persist(StorageLevel.MEMORY_AND_DISK)
     //DATASET//
     val nflds = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfldata_updated.csv").as[NFL]
@@ -72,6 +72,7 @@ object Main {
     reparnflrdd.persist(StorageLevel.MEMORY_AND_DISK)
     //BROADCAST VARIABLE (DATAFRAME)//
     val broadcastData = spark.sparkContext.broadcast(reparnfldf)
+    val broadcastDataNoRepar = spark.sparkContext.broadcast(nfldf)
 
 
     //P2 ADDITION////P2 ADDITION////P2 ADDITION////P2 ADDITION//
@@ -155,10 +156,10 @@ object Main {
           println("What would you like to do today, " + user + "?")
           println("1) Most Popular Formations")
           println("2) Total Sacks")
-          println("3) Query 3")
-          println("4) Query 4")
-          println("5) Query 5")
-          println("6) Query 6")
+          println("3) Fourth Down Success Rates")
+          println("4) SF Yards Per Rush Direction")
+          println("5) Penalty Yards by Team and Formation")
+          println("6) Yards in Shotgun Formation")
           if(privileges == "admin"){
             println("7) Add user -ADMIN ONLY OPTION-")
             println("8) Delete user -ADMIN ONLY OPTION")
@@ -187,15 +188,97 @@ object Main {
 
             case "3" =>
               //QUERY 3
+              val fourthDownSuccess10 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+                (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && (broadcastDataNoRepar.value("ToGo") >= 9 ))
+              val fourthDownCntSuccess10 = fourthDownSuccess10.agg(functions.count("Down")).first.getLong(0)
+
+
+              val fourthDownSuccess8 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+                (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") <= 8) && (broadcastDataNoRepar.value("ToGo") > 6)))
+              val fourthDownCntSuccess8 = fourthDownSuccess8.agg(functions.count("Down")).first.getLong(0)
+
+              val fourthDownSuccess6 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+                ((broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1)) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") === 6) || (broadcastDataNoRepar.value("ToGo") === 5)))
+              val fourthDownCntSuccess6 = fourthDownSuccess6.agg(functions.count("Down")).first.getLong(0)
+
+              val fourthDownSuccess4 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+                ((broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1)) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") === 4) || (broadcastDataNoRepar.value("ToGo") === 3)))
+              val fourthDownCntSuccess4 = fourthDownSuccess4.agg(functions.count("Down")).first.getLong(0)
+
+              val fourthDownSuccess2 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+                ((broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1)) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") === 2) || (broadcastDataNoRepar.value("ToGo") === 1)))
+              val fourthDownCntSuccess2 = fourthDownSuccess2.agg(functions.count("Down")).first.getLong(0)
+
+              val fourthDownTotal = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+                (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1))
+              val fourthDownCntTotal = fourthDownTotal.agg(functions.count("Down")).first.getLong(0)
+
+              val successRate10 = (fourthDownCntSuccess10.toDouble/fourthDownCntTotal.toDouble) *100.0
+              val successRate8 = (fourthDownCntSuccess8.toDouble/fourthDownCntTotal.toDouble) *100.0
+              val successRate6 = (fourthDownCntSuccess6.toDouble/fourthDownCntTotal.toDouble) *100.0
+              val successRate4 = (fourthDownCntSuccess4.toDouble/fourthDownCntTotal.toDouble) *100.0
+              val successRate2 = (fourthDownCntSuccess2.toDouble/fourthDownCntTotal.toDouble) *100.0
+
+              println("4th Down Plays Success Rate 9 yards or more: " + f"$successRate10%1.2f" + "%")
+              println("4th Down Plays Success Rate 7-8 yards: " + f"$successRate8%1.2f" + "%")
+              println("4th Down Plays Success Rate 5-6 yards: " + f"$successRate6%1.2f" + "%")
+              println("4th Down Plays Success Rate 3-4 yards: " + f"$successRate4%1.2f" + "%")
+              println("4th Down Plays Success Rate 1-2 yards: " + f"$successRate2%1.2f" + "%")
+              println()
 
             case "4" =>
               //QUERY 4
+              val rdLeftEnd = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "LEFT END")
+              val sumLeftEnd = rdLeftEnd.agg(functions.sum("yards")).first.get(0)
+
+
+              //Right End Yards Sum
+              val rdRightEnd = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "RIGHT END")
+              val sumRightEnd = rdRightEnd.agg(functions.sum("yards")).first.get(0)
+
+
+              //Left Guard Yards Sum
+              val rdLeftGuard = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "LEFT GUARD")
+              val sumLeftGuard = rdLeftGuard.agg(functions.sum("yards")).first.get(0)
+
+
+              //Right Guard Yards Sum
+              val rdRightGuard = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "RIGHT GUARD")
+              val sumRightGuard = rdRightGuard.agg(functions.sum("yards")).first.get(0)
+
+
+              //Left Tackle Yards Sum
+              val rdLeftTackle = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "LEFT TACKLE")
+              val sumLeftTackle = rdLeftTackle.agg(functions.sum("yards")).first.get(0)
+
+              //Right Tackle Yards Sum
+              val rdRightTackle = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "RIGHT TACKLE")
+              val sumRightTackle = rdRightTackle.agg(functions.sum("yards")).first.get(0)
+
+              //Center Yards Sum
+              val rdCenter = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+                broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "CENTER")
+              val sumCenter = rdCenter.agg(functions.sum("yards")).first.get(0)
+
+              printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n","Name","Left End","Left Tackle","Left Guard","Center","Right Guard","Right Tackle","Right End")
+
+              printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n","SF 49ers",sumLeftEnd,sumLeftTackle,sumLeftGuard,sumCenter,sumRightGuard,sumRightTackle,sumRightEnd)
+
+              println()
 
             case "5" =>
               //QUERY 5
+            broadcastDataNoRepar.value.select("DefenseTeam","Formation","PenaltyYards").groupBy("DefenseTeam","Formation").sum("PenaltyYards").where("DefenseTeam is not null").orderBy("DefenseTeam").withColumnRenamed("sum(PenaltyYards)","Total_Penalty_Yards").show()
 
             case "6" =>
               //QUERY 6
+            broadcastDataNoRepar.value.select("OffenseTeam","yards","Formation").groupBy("OffenseTeam","Formation").sum("yards").where("Formation like 'SHOTGUN'").withColumnRenamed("sum(yards)","Yards in Shotgun Formation").orderBy(desc("Yards in Shotgun Formation")).show()
 
 
             case "7" =>
