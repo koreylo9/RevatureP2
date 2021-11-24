@@ -71,45 +71,35 @@ object Hive {
     val broadcastData = spark.sparkContext.broadcast(nfldf).value
 
     val nflupdated = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfldata_updated.csv")
-    val broadcastUpdated = spark.sparkContext.broadcast(nflupdated).value
+    val broadcastNoRepar = spark.sparkContext.broadcast(nflupdated).value
 
-    val fourthDownSuccess = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")))
+//    val fourthDownSuccess = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+//      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")))
+//    val fourthDownCntSuccess = fourthDownSuccess.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownCntSuccess = fourthDownSuccess.agg(functions.count("Down")).first.getLong(0)
-
-    val fourthDownSuccess10 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && (broadcastUpdated("ToGo") >= 9 ))
-
+    val fourthDownSuccess10 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && (broadcastNoRepar("ToGo") >= 9 ))
     val fourthDownCntSuccess10 = fourthDownSuccess10.agg(functions.count("Down")).first.getLong(0)
 
-    spark.sql("SELECT count(Down) as count FROM nfl_data WHERE Down = 4 AND (isRush = 1 OR isPass = 1)").show()
-    spark.sql("SELECT count(Down) FROM nfl_data WHERE (Down = 4) AND (isRush = 1 OR isPass = 1) AND (Yards >= ToGo) AND (ToGo = 7 OR ToGo = 8)").show()
 
-//    spark.sql("SELECT ROUND(r.count/m.count,2) as Success_6_to_8 FROM " +
-//            "(SELECT count(Down) count FROM nfl_data WHERE DOWN = 4 AND (isRush = 1 OR isPass = 1) AND Yards >= ToGo AND (ToGo <= 8 AND ToGo > 6)) r, " +
-//            "(SELECT count(Down) count FROM nfl_data WHERE isRush = 1 OR isPass = 1 AND Down = 4) m ").show()
-
-
-    val fourthDownSuccess8 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") <= 8) && (broadcastUpdated("ToGo") > 6)))
+    val fourthDownSuccess8 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") <= 8) && (broadcastNoRepar("ToGo") > 6)))
     val fourthDownCntSuccess8 = fourthDownSuccess8.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess6 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      ((broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1)) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") === 6) || (broadcastUpdated("ToGo") === 5)))
+    val fourthDownSuccess6 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+      ((broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1)) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") === 6) || (broadcastNoRepar("ToGo") === 5)))
     val fourthDownCntSuccess6 = fourthDownSuccess6.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess4 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      ((broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1)) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") === 4) || (broadcastUpdated("ToGo") === 3)))
+    val fourthDownSuccess4 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+      ((broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1)) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") === 4) || (broadcastNoRepar("ToGo") === 3)))
     val fourthDownCntSuccess4 = fourthDownSuccess4.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess2 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      ((broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1)) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") === 2) || (broadcastUpdated("ToGo") === 1)))
+    val fourthDownSuccess2 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+      ((broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1)) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") === 2) || (broadcastNoRepar("ToGo") === 1)))
     val fourthDownCntSuccess2 = fourthDownSuccess2.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownTotal = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
-      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1))
-
+    val fourthDownTotal = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
+      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1))
     val fourthDownCntTotal = fourthDownTotal.agg(functions.count("Down")).first.getLong(0)
 
     val successRate10 = (fourthDownCntSuccess10.toDouble/fourthDownCntTotal.toDouble) *100.0
@@ -118,17 +108,11 @@ object Hive {
     val successRate4 = (fourthDownCntSuccess4.toDouble/fourthDownCntTotal.toDouble) *100.0
     val successRate2 = (fourthDownCntSuccess2.toDouble/fourthDownCntTotal.toDouble) *100.0
 
-
-
-
-    println(fourthDownCntSuccess)
-    println(fourthDownCntTotal)
-    println(fourthDownCntSuccess8)
-    println("4th Down Plays Success 9 yards or more: " + f"$successRate10%1.2f")
-    println("4th Down Plays Success 7-8 yards: " + f"$successRate8%1.2f")
-    println("4th Down Plays Success 5-6 yards: " + f"$successRate6%1.2f")
-    println("4th Down Plays Success 3-4 yards: " + f"$successRate4%1.2f")
-    println("4th Down Plays Success 1-2 yards: " + f"$successRate2%1.2f")
+    println("4th Down Plays Success Rate 9 yards or more: " + f"$successRate10%1.2f" + "%")
+    println("4th Down Plays Success Rate 7-8 yards: " + f"$successRate8%1.2f" + "%")
+    println("4th Down Plays Success Rate 5-6 yards: " + f"$successRate6%1.2f" + "%")
+    println("4th Down Plays Success Rate 3-4 yards: " + f"$successRate4%1.2f" + "%")
+    println("4th Down Plays Success Rate 1-2 yards: " + f"$successRate2%1.2f" + "%")
 
 
 
