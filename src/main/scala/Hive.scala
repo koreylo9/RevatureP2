@@ -23,14 +23,28 @@ object Hive {
     spark.sparkContext.setLogLevel("ERROR")
 
     spark.sql("DROP table IF EXISTS nfl_data")
-    spark.sql("CREATE table IF NOT exists nfl_data(GameId int, GameDate Date, OffenseTeam String," +
-      "DefenseTeam String, Description String,SeasonYear int, Yards int, Formation String, IsRush int," +
-      "IsPass int, IsSack int, IsPenalty int, RushDirection String, PenaltyYards int)" +
+    spark.sql("CREATE table IF NOT exists nfl_data(GameId int, GameDate Date, Quarter int, Minute int, Second int, OffenseTeam String," +
+      "DefenseTeam String, Down int, ToGo int, YardLine int, SeriesFirstDown int, NextScore int, Description String, TeamWin int, SeasonYear int, Yards int," +
+      "Formation String, PlayType String, IsRush int, IsPass int, IsIncomplete int, IsTouchdown int, PassType String, IsSack int, IsChallenge int, IsChallengeReversed int," +
+      "IsMeasurement int, IsInterception int, IsFumble int, IsPenalty int, IsTwoPointConversion int, IsTwoPointConversionSuccessful int, RushDirection String, YardLineFixed int, YardLineDirection String," +
+      "IsPenaltyAccepted int, PenaltyTeam String, IsNoPlay int, PenaltyType String, PenaltyYards int)" +
       "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'")
 
-    spark.sql("Load data Local Inpath 'nfl_data2.csv' into table nfl_data")
+          spark.sql("Load data Local Inpath 'nfldata_updated.csv' into table nfl_data")
+//        spark.sql("select * from nfl_data ").show(100)
+
+
+    //    spark.sql("CREATE table IF NOT exists nfl_data(GameId int, GameDate Date, OffenseTeam String," +
+//      "DefenseTeam String, Description String,SeasonYear int, Yards int, Formation String, IsRush int," +
+//      "IsPass int, IsSack int, IsPenalty int, RushDirection String, PenaltyYards int)" +
+//      "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'")
+//
+//    spark.sql("Load data Local Inpath 'nfl_data2.csv' into table nfl_data")
     //    spark.sql("select * from nfl_data ").show(100)
   }
+
+
+
 
 
   def showData(choice:String) : Unit = {
@@ -56,32 +70,130 @@ object Hive {
     val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfl_data2.csv")
     val broadcastData = spark.sparkContext.broadcast(nfldf).value
 
+    val nflupdated = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfldata_updated.csv")
+    val broadcastUpdated = spark.sparkContext.broadcast(nflupdated).value
+
+    val fourthDownSuccess = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")))
+
+    val fourthDownCntSuccess = fourthDownSuccess.agg(functions.count("Down")).first.getLong(0)
+
+    val fourthDownSuccess10 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && (broadcastUpdated("ToGo") >= 9 ))
+
+    val fourthDownCntSuccess10 = fourthDownSuccess10.agg(functions.count("Down")).first.getLong(0)
+
+    spark.sql("SELECT count(Down) as count FROM nfl_data WHERE Down = 4 AND (isRush = 1 OR isPass = 1)").show()
+    spark.sql("SELECT count(Down) FROM nfl_data WHERE (Down = 4) AND (isRush = 1 OR isPass = 1) AND (Yards >= ToGo) AND (ToGo = 7 OR ToGo = 8)").show()
+
+//    spark.sql("SELECT ROUND(r.count/m.count,2) as Success_6_to_8 FROM " +
+//            "(SELECT count(Down) count FROM nfl_data WHERE DOWN = 4 AND (isRush = 1 OR isPass = 1) AND Yards >= ToGo AND (ToGo <= 8 AND ToGo > 6)) r, " +
+//            "(SELECT count(Down) count FROM nfl_data WHERE isRush = 1 OR isPass = 1 AND Down = 4) m ").show()
+
+
+    val fourthDownSuccess8 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") <= 8) && (broadcastUpdated("ToGo") > 6)))
+    val fourthDownCntSuccess8 = fourthDownSuccess8.agg(functions.count("Down")).first.getLong(0)
+
+    val fourthDownSuccess6 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      ((broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1)) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") === 6) || (broadcastUpdated("ToGo") === 5)))
+    val fourthDownCntSuccess6 = fourthDownSuccess6.agg(functions.count("Down")).first.getLong(0)
+
+    val fourthDownSuccess4 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      ((broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1)) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") === 4) || (broadcastUpdated("ToGo") === 3)))
+    val fourthDownCntSuccess4 = fourthDownSuccess4.agg(functions.count("Down")).first.getLong(0)
+
+    val fourthDownSuccess2 = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      ((broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1)) && (broadcastUpdated("Yards") >= broadcastUpdated("ToGo")) && ((broadcastUpdated("ToGo") === 2) || (broadcastUpdated("ToGo") === 1)))
+    val fourthDownCntSuccess2 = fourthDownSuccess2.agg(functions.count("Down")).first.getLong(0)
+
+    val fourthDownTotal = broadcastUpdated.select("Down","isRush","isPass").filter((broadcastUpdated("Down") === 4) &&
+      (broadcastUpdated("isRush") === 1 || broadcastUpdated("isPass") === 1))
+
+    val fourthDownCntTotal = fourthDownTotal.agg(functions.count("Down")).first.getLong(0)
+
+    val successRate10 = (fourthDownCntSuccess10.toDouble/fourthDownCntTotal.toDouble) *100.0
+    val successRate8 = (fourthDownCntSuccess8.toDouble/fourthDownCntTotal.toDouble) *100.0
+    val successRate6 = (fourthDownCntSuccess6.toDouble/fourthDownCntTotal.toDouble) *100.0
+    val successRate4 = (fourthDownCntSuccess4.toDouble/fourthDownCntTotal.toDouble) *100.0
+    val successRate2 = (fourthDownCntSuccess2.toDouble/fourthDownCntTotal.toDouble) *100.0
+
+
+
+
+    println(fourthDownCntSuccess)
+    println(fourthDownCntTotal)
+    println(fourthDownCntSuccess8)
+    println("4th Down Plays Success 9 yards or more: " + f"$successRate10%1.2f")
+    println("4th Down Plays Success 7-8 yards: " + f"$successRate8%1.2f")
+    println("4th Down Plays Success 5-6 yards: " + f"$successRate6%1.2f")
+    println("4th Down Plays Success 3-4 yards: " + f"$successRate4%1.2f")
+    println("4th Down Plays Success 1-2 yards: " + f"$successRate2%1.2f")
+
+
+
+
+
+
+
     //Dataframe
 //    val rdd = spark.table("nfl_data")
 
     // DataFrame to DataSet
-    val rds = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+
+    // Left End Yards Sum
+    val rdLeftEnd = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
       broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT END")
+    val sumLeftEnd = rdLeftEnd.agg(functions.sum("yards")).first.get(0)
 
 
-    val rd2 = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+    //Right End Yards Sum
+    val rdRightEnd = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
       broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT END")
-
-    rds.withColumnRenamed("yards","rushLeft").join(rd2.withColumnRenamed("yards","rushRight"),"offenseteam").show()
-
-//    rds.join(rd2,"offenseteam").show()
+    val sumRightEnd = rdRightEnd.agg(functions.sum("yards")).first.get(0)
 
 
-//     Perform action
-//    val rda = rds.agg(functions.sum("yards")).first.get(0)
-
-    //Test against sql query
-//    val dataF = spark.sql("SELECT OffenseTeam,isRush,rushdirection FROM nfl_data WHERE isRush = 1 AND OffenseTeam = 'SF' AND rushdirection='LEFT END'").show()
-
+    //Left Guard Yards Sum
+    val rdLeftGuard = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT GUARD")
+    val sumLeftGuard = rdLeftGuard.agg(functions.sum("yards")).first.get(0)
 
 
-    //result that should be same as query
-//    println(rda)
+    //Right Guard Yards Sum
+    val rdRightGuard = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT GUARD")
+    val sumRightGuard = rdRightGuard.agg(functions.sum("yards")).first.get(0)
+
+
+    //Left Tackle Yards Sum
+    val rdLeftTackle = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT TACKLE")
+    val sumLeftTackle = rdLeftTackle.agg(functions.sum("yards")).first.get(0)
+
+    //Right Tackle Yards Sum
+    val rdRightTackle = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT TACKLE")
+    val sumRightTackle = rdRightTackle.agg(functions.sum("yards")).first.get(0)
+
+    //Center Yards Sum
+    val rdCenter = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
+      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "CENTER")
+    val sumCenter = rdCenter.agg(functions.sum("yards")).first.get(0)
+
+    printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n","Name","Left End","Left Tackle","Left Guard","Center","Right Guard","Right Tackle","Right End")
+
+    printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n","SF 49ers",sumLeftEnd,sumLeftTackle,sumLeftGuard,sumCenter,sumRightGuard,sumRightTackle,sumRightEnd)
+
+//    spark.sql("Select * FROM " +
+//      "(Select sum(yards) as Left_End FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'LEFT END') t1," +
+//      "(Select sum(yards) as Left_Tackle FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'LEFT TACKLE') t2," +
+//      "(Select sum(yards) as Left_Guard FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'LEFT GUARD') t3," +
+//      "(Select sum(yards) as Center FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'CENTER') t4," +
+//      "(Select sum(yards) as Right_Guard FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'RIGHT GUARD') t5," +
+//      "(Select sum(yards) as Right_Tackle FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'RIGHT TACKLE') t6," +
+//      "(Select sum(yards) as Right_End FROM nfl_data WHERE offenseTeam = 'SF' AND isRush = 1 AND rushdirection = 'RIGHT END') t7 ").show()
+
+
 
 
 
