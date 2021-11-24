@@ -9,6 +9,7 @@ import org.apache.spark.sql.{Encoder, Encoders}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.functions.{col, count, countDistinct, desc, when}
 import CustomImplicits._
+import java.security.MessageDigest
 
 import scala.annotation.tailrec
 import scala.sys.exit
@@ -18,9 +19,10 @@ object Main {
 
   def main(args:Array[String]): Unit = {
     var valid_cred = false
-    var user = "";
-    var pass = "";
-    var privileges ="";
+    var user = ""
+    var pass = ""
+    var encryptedpass = ""
+    var privileges = ""
     var mainmenuselection = ""
     var mainmenucheck = false
     var optionmenuselection = ""
@@ -58,15 +60,19 @@ object Main {
 
     //DATAFRAME//
     val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv")
-    nfldf.persist(StorageLevel.MEMORY_AND_DISK)
+    val reparnfldf = nfldf.repartition(3).toDF()
+    reparnfldf.persist(StorageLevel.MEMORY_AND_DISK)
     //DATASET//
     val nflds = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv").as[NFL]
-    nflds.persist(StorageLevel.MEMORY_AND_DISK)
+    val reparnflds = nflds.repartition(3)
+    reparnflds.persist(StorageLevel.MEMORY_AND_DISK)
     //RDD//
     val nflrdd = nfldf.rdd
-    nflrdd.persist(StorageLevel.MEMORY_AND_DISK)
+    val reparnflrdd = nflrdd.repartition(3)
+    reparnflrdd.persist(StorageLevel.MEMORY_AND_DISK)
     //BROADCAST VARIABLE (DATAFRAME)//
-    val broadcastData = spark.sparkContext.broadcast(nfldf)
+    val broadcastData = spark.sparkContext.broadcast(reparnfldf)
+
 
     //P2 ADDITION////P2 ADDITION////P2 ADDITION////P2 ADDITION//
 
@@ -74,8 +80,9 @@ object Main {
     do {
 
       valid_cred = false
-      user = "";
-      pass = "";
+      user = ""
+      pass = ""
+      encryptedpass = ""
       mainmenuselection = ""
       mainmenucheck = false
       optionmenuselection = ""
@@ -99,6 +106,7 @@ object Main {
               user = StdIn.readLine()
               print("Enter your password: ")
               pass = StdIn.readLine()
+              encryptedpass = md5(pass)
               println()
 
               var resultSet = statement.executeQuery("SELECT * FROM users;")
@@ -110,7 +118,7 @@ object Main {
                   var check_pass = resultSet.getString(3)
                   privileges = resultSet.getString(4)
 
-                  if (check_user == user && check_pass == pass) {
+                  if (check_user == user && check_pass == encryptedpass) {
                     valid_cred = true
                     mainmenucheck = true
                     println("Success! Welcome '" + user + "' with '" + privileges + "' privileges")
@@ -196,6 +204,7 @@ object Main {
               var newuser = StdIn.readLine()
               print("What is the password for this user?: ")
               var newpass = StdIn.readLine()
+              var newencryptedpass = md5(newpass)
 
               var newpriv = ""
 
@@ -224,7 +233,7 @@ object Main {
               }
 
               statement.executeUpdate("INSERT INTO users (user_name,user_password,user_privileges) \n" +
-                "VALUES ('" + newuser + "','" + newpass + "','" + newpriv + "');")
+                "VALUES ('" + newuser + "','" + newencryptedpass + "','" + newpriv + "');")
 
               println(Console.BLUE + "SUCCESS! USER HAS BEEN ADDED!" + Console.RESET)
               println()
@@ -265,7 +274,14 @@ object Main {
 
   }
 
-  
+
+  def md5(s: String):String = {
+    var news=MessageDigest.getInstance("MD5").digest(s.getBytes)
+    var news2 = news.mkString("")
+    return news2
+  }
+
+
 
 }
 
