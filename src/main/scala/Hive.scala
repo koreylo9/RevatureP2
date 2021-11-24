@@ -67,39 +67,39 @@ object Hive {
 //    }
 
     //Angel Code
-    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfl_data2.csv")
-    val broadcastData = spark.sparkContext.broadcast(nfldf).value
+//    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfl_data2.csv")
+//    val broadcastData = spark.sparkContext.broadcast(nfldf).value
 
     val nflupdated = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("nfldata_updated.csv")
-    val broadcastNoRepar = spark.sparkContext.broadcast(nflupdated).value
+    val broadcastDataNoRepar = spark.sparkContext.broadcast(nflupdated)
 
-//    val fourthDownSuccess = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-//      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")))
+//    val fourthDownSuccess = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+//      (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")))
 //    val fourthDownCntSuccess = fourthDownSuccess.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess10 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && (broadcastNoRepar("ToGo") >= 9 ))
+    val fourthDownSuccess10 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+      (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && (broadcastDataNoRepar.value("ToGo") >= 9 ))
     val fourthDownCntSuccess10 = fourthDownSuccess10.agg(functions.count("Down")).first.getLong(0)
 
 
-    val fourthDownSuccess8 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") <= 8) && (broadcastNoRepar("ToGo") > 6)))
+    val fourthDownSuccess8 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+      (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") <= 8) && (broadcastDataNoRepar.value("ToGo") > 6)))
     val fourthDownCntSuccess8 = fourthDownSuccess8.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess6 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-      ((broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1)) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") === 6) || (broadcastNoRepar("ToGo") === 5)))
+    val fourthDownSuccess6 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+      ((broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1)) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") === 6) || (broadcastDataNoRepar.value("ToGo") === 5)))
     val fourthDownCntSuccess6 = fourthDownSuccess6.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess4 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-      ((broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1)) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") === 4) || (broadcastNoRepar("ToGo") === 3)))
+    val fourthDownSuccess4 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+      ((broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1)) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") === 4) || (broadcastDataNoRepar.value("ToGo") === 3)))
     val fourthDownCntSuccess4 = fourthDownSuccess4.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownSuccess2 = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-      ((broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1)) && (broadcastNoRepar("Yards") >= broadcastNoRepar("ToGo")) && ((broadcastNoRepar("ToGo") === 2) || (broadcastNoRepar("ToGo") === 1)))
+    val fourthDownSuccess2 = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+      ((broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1)) && (broadcastDataNoRepar.value("Yards") >= broadcastDataNoRepar.value("ToGo")) && ((broadcastDataNoRepar.value("ToGo") === 2) || (broadcastDataNoRepar.value("ToGo") === 1)))
     val fourthDownCntSuccess2 = fourthDownSuccess2.agg(functions.count("Down")).first.getLong(0)
 
-    val fourthDownTotal = broadcastNoRepar.select("Down","isRush","isPass").filter((broadcastNoRepar("Down") === 4) &&
-      (broadcastNoRepar("isRush") === 1 || broadcastNoRepar("isPass") === 1))
+    val fourthDownTotal = broadcastDataNoRepar.value.select("Down","isRush","isPass").filter((broadcastDataNoRepar.value("Down") === 4) &&
+      (broadcastDataNoRepar.value("isRush") === 1 || broadcastDataNoRepar.value("isPass") === 1))
     val fourthDownCntTotal = fourthDownTotal.agg(functions.count("Down")).first.getLong(0)
 
     val successRate10 = (fourthDownCntSuccess10.toDouble/fourthDownCntTotal.toDouble) *100.0
@@ -126,42 +126,42 @@ object Hive {
     // DataFrame to DataSet
 
     // Left End Yards Sum
-    val rdLeftEnd = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT END")
+    val rdLeftEnd = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "LEFT END")
     val sumLeftEnd = rdLeftEnd.agg(functions.sum("yards")).first.get(0)
 
 
     //Right End Yards Sum
-    val rdRightEnd = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT END")
+    val rdRightEnd = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "RIGHT END")
     val sumRightEnd = rdRightEnd.agg(functions.sum("yards")).first.get(0)
 
 
     //Left Guard Yards Sum
-    val rdLeftGuard = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT GUARD")
+    val rdLeftGuard = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "LEFT GUARD")
     val sumLeftGuard = rdLeftGuard.agg(functions.sum("yards")).first.get(0)
 
 
     //Right Guard Yards Sum
-    val rdRightGuard = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT GUARD")
+    val rdRightGuard = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "RIGHT GUARD")
     val sumRightGuard = rdRightGuard.agg(functions.sum("yards")).first.get(0)
 
 
     //Left Tackle Yards Sum
-    val rdLeftTackle = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "LEFT TACKLE")
+    val rdLeftTackle = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "LEFT TACKLE")
     val sumLeftTackle = rdLeftTackle.agg(functions.sum("yards")).first.get(0)
 
     //Right Tackle Yards Sum
-    val rdRightTackle = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "RIGHT TACKLE")
+    val rdRightTackle = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "RIGHT TACKLE")
     val sumRightTackle = rdRightTackle.agg(functions.sum("yards")).first.get(0)
 
     //Center Yards Sum
-    val rdCenter = broadcastData.select("offenseteam","yards").filter((broadcastData("isRush") === 1) &&
-      broadcastData("offenseTeam") === "SF" && broadcastData("rushdirection") === "CENTER")
+    val rdCenter = broadcastDataNoRepar.value.select("offenseteam","yards").filter((broadcastDataNoRepar.value("isRush") === 1) &&
+      broadcastDataNoRepar.value("offenseTeam") === "SF" && broadcastDataNoRepar.value("rushdirection") === "CENTER")
     val sumCenter = rdCenter.agg(functions.sum("yards")).first.get(0)
 
     printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n","Name","Left End","Left Tackle","Left Guard","Center","Right Guard","Right Tackle","Right End")
