@@ -59,11 +59,11 @@ object Main {
     //CREATE BROADCAST VARIABLE, DATAFRAME, DATASET, AND RDD TO USE THROUGHOUT THE PROGRAM//
 
     //DATAFRAME//
-    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv")
+    val nfldf = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfldata_updated.csv")
     val reparnfldf = nfldf.repartition(3).toDF()
     reparnfldf.persist(StorageLevel.MEMORY_AND_DISK)
     //DATASET//
-    val nflds = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfl_data2.csv").as[NFL]
+    val nflds = spark.read.option("header","true").option("delimiter",",").option("inferSchema","true").csv("input/nfldata_updated.csv").as[NFL]
     val reparnflds = nflds.repartition(3)
     reparnflds.persist(StorageLevel.MEMORY_AND_DISK)
     //RDD//
