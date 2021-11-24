@@ -181,10 +181,17 @@ object Main {
               //QUERY FORM: SELECT DISTINCT Formation, COUNT(Formation) OVER(Partition by Formation) AS Total_Times_Seen FROM nfl_data ORDER BY Total_Times_Seen DESC
               broadcastData.value.groupBy("Formation").count().sort(desc("count")).withColumnRenamed("count","Total_Times_Seen").show()
 
+              println("Enter something to continue!")
+              StdIn.readLine()
+
             case "2" =>
               //QUERY 2
               //QUERY FORM: SELECT count(isSack) as Total_Sacks FROM nfl_data WHERE isSack = 1
               nflds.groupBy("isSack").count().filter("isSack == 1").withColumnRenamed("count","Total_Sacks").show()
+
+              println("Enter something to continue!")
+              StdIn.readLine()
+
 
             case "3" =>
               //QUERY 3
@@ -225,6 +232,10 @@ object Main {
               println("4th Down Plays Success Rate 3-4 yards: " + f"$successRate4%1.2f" + "%")
               println("4th Down Plays Success Rate 1-2 yards: " + f"$successRate2%1.2f" + "%")
               println()
+
+              println("Enter something to continue!")
+              StdIn.readLine()
+
 
             case "4" =>
               //QUERY 4
@@ -272,14 +283,24 @@ object Main {
 
               println()
 
+              println("Enter something to continue!")
+              StdIn.readLine()
+
+
             case "5" =>
               //QUERY 5
             broadcastDataNoRepar.value.select("DefenseTeam","Formation","PenaltyYards").groupBy("DefenseTeam","Formation").sum("PenaltyYards").where("DefenseTeam is not null").orderBy("DefenseTeam").withColumnRenamed("sum(PenaltyYards)","Total_Penalty_Yards").show()
+
+              println("Enter something to continue!")
+              StdIn.readLine()
+
 
             case "6" =>
               //QUERY 6
             broadcastDataNoRepar.value.select("OffenseTeam","yards","Formation").groupBy("OffenseTeam","Formation").sum("yards").where("Formation like 'SHOTGUN'").withColumnRenamed("sum(yards)","Yards in Shotgun Formation").orderBy(desc("Yards in Shotgun Formation")).show()
 
+              println("Enter something to continue!")
+              StdIn.readLine()
 
             case "7" =>
               //ADD A USER
@@ -321,6 +342,10 @@ object Main {
               println(Console.BLUE + "SUCCESS! USER HAS BEEN ADDED!" + Console.RESET)
               println()
 
+              println("Enter something to continue!")
+              StdIn.readLine()
+
+
             case "8" =>
               //DELETE A USER
               print("What is the User ID of the user you are trying to delete? ")
@@ -338,6 +363,10 @@ object Main {
                 statement.executeUpdate("DELETE FROM users WHERE user_id = " + userid + ";")
                 println(Console.BLUE + "USER DELETED SUCCESSFULLY" + Console.RESET)
                 println()
+
+                println("Enter something to continue!")
+                StdIn.readLine()
+``
               }
 
             case "9" => optionmenucheck = true
